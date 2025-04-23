@@ -23,7 +23,7 @@ public class ApplicationAPI {
 
     private static final HashMap<String, byte[]> FILE_CACHE = new HashMap<>();
 
-    private static final Logger logger = Logger.getLogger(LocalServer.class.getName());
+    private static final Logger logger = Logger.getLogger(ApplicationAPI.class.getName());
 
     static {
         MEDIA_TYPES.put("html", "text/html");
