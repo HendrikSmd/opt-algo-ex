@@ -11,18 +11,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LocalApplicationServer {
 
     private int port;
 
-    private static final Path RESOURCES_ROOT = Paths.get("resources");
+    private static final Path RESOURCES_ROOT = Paths.get("src/main/webapp");
 
     private static final HashMap<String, String> MEDIA_TYPES = new HashMap<>();
 
     private static final HashMap<String, byte[]> FILE_CACHE = new HashMap<>();
 
-    private static final System.Logger logger = System.getLogger(LocalApplicationServer.class.getName());
+    private static final Logger logger = Logger.getLogger(LocalApplicationServer.class.getName());
 
     static {
         MEDIA_TYPES.put("html", "text/html");
@@ -32,9 +34,9 @@ public class LocalApplicationServer {
             Path filePath = RESOURCES_ROOT.resolve(file);
             try {
                 FILE_CACHE.put(file, Files.readAllBytes(filePath));
-                logger.log(System.Logger.Level.INFO, String.format("Successfully read and cached contents of file %s", filePath));
+                logger.log(Level.INFO, String.format("Successfully read and cached contents of file %s", filePath));
             } catch (IOException exc) {
-                logger.log(System.Logger.Level.WARNING, String.format("Could not read contents of file %s", filePath));
+                logger.log(Level.WARNING, String.format("Could not read contents of file %s", filePath));
                 continue;
             }
         }
@@ -54,7 +56,7 @@ public class LocalApplicationServer {
         server.createContext("/", exchange -> {
             String slashlessPath = exchange.getRequestURI().getPath().substring(1);
             logger.log(
-                    System.Logger.Level.INFO,
+                    Level.INFO,
                     String.format("Handling request to %s", exchange.getRequestURI().getPath())
             );
 
@@ -65,7 +67,7 @@ public class LocalApplicationServer {
                 if (!Files.exists(requestedFilePath)) {
                     sendNotFound(exchange);
                     logger.log(
-                            System.Logger.Level.ERROR,
+                            Level.WARNING,
                             String.format("Requested file %s not found", fileRequested)
                     );
                     return;
@@ -74,18 +76,18 @@ public class LocalApplicationServer {
                 byte[] fileContents;
                 if (FILE_CACHE.containsKey(fileRequested)) {
                     logger.log(
-                            System.Logger.Level.INFO,
+                            Level.INFO,
                             String.format("Using cached contents of requested file %s", fileRequested)
                     );
                     fileContents = FILE_CACHE.get(fileRequested);
                 } else {
                     logger.log(
-                            System.Logger.Level.INFO,
+                            Level.INFO,
                             String.format("No cached contents for file %s found. Reading them now...", fileRequested)
                     );
                     fileContents = Files.readAllBytes(requestedFilePath);
                     logger.log(
-                            System.Logger.Level.INFO,
+                            Level.INFO,
                             String.format("Contents for file %s read", fileRequested)
                     );
                 }
@@ -99,12 +101,12 @@ public class LocalApplicationServer {
                     out.write(fileContents);
                 }
                 logger.log(
-                        System.Logger.Level.INFO,
+                        Level.INFO,
                         String.format("Successfully written response body for request to %s", exchange.getRequestURI().getPath())
                 );
             } catch (Exception e) {
                 logger.log(
-                        System.Logger.Level.ERROR,
+                        Level.WARNING,
                         String.format("Request handling to %s failed", exchange.getRequestURI().getPath())
                 );
                 sendInternalServerError(exchange, e);
